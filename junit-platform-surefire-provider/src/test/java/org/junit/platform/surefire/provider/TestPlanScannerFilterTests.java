@@ -11,6 +11,7 @@
 package org.junit.platform.surefire.provider;
 
 import static java.util.Collections.emptyList;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.platform.launcher.core.LauncherFactory;
@@ -66,7 +68,11 @@ public class TestPlanScannerFilterTests {
 	}
 
 	private TestPlanScannerFilter newFilter() {
-		return new TestPlanScannerFilter(LauncherFactory.create(), "", "");
+		return newFilter("", "");
+	}
+
+	private TestPlanScannerFilter newFilter(String groups, String excludedGroups) {
+		return new TestPlanScannerFilter(LauncherFactory.create(), groups, excludedGroups);
 	}
 
 	private static class EmptyClass {

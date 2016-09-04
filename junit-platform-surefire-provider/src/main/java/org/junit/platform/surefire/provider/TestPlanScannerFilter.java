@@ -24,6 +24,7 @@ import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.TestPlan;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 
 /**
  * @since 1.0
@@ -39,8 +40,8 @@ final class TestPlanScannerFilter implements ScannerFilter {
 
 	public TestPlanScannerFilter(final Launcher launcher, final String groups, final String excludedGroups) {
 		this.launcher = launcher;
-		this.groups = groups.split(",");
-		this.excludedGroups = excludedGroups.split(",");
+		this.groups = groups.isEmpty() ? new String[0] : groups.split(",");
+		this.excludedGroups = excludedGroups.isEmpty() ? new String[0] : excludedGroups.split(",");
 	}
 
 	@Override
@@ -52,23 +53,14 @@ final class TestPlanScannerFilter implements ScannerFilter {
 	}
 
 	private LauncherDiscoveryRequest createLauncherDiscoveryRequest(final Class<?> testClass) {
-		return request().selectors(selectJavaClass(testClass))
-			.filters(includeTagsFilter(), excludeTagsFilter())
-			.build();
-	}
-
-	private Filter<TestDescriptor> excludeTagsFilter() {
-		if (excludedGroups.length > 0) {
-			return excludeTags(excludedGroups);
-		}
-		return null;
-	}
-
-	private Filter<TestDescriptor> includeTagsFilter() {
+		LauncherDiscoveryRequestBuilder builder = request().selectors(selectJavaClass(testClass));
 		if (groups.length > 0) {
-			return includeTags(groups);
+			builder = builder.filters(includeTags(groups));
 		}
-		return null;
+		if (excludedGroups.length > 0) {
+			builder = builder.filters(excludeTags(excludedGroups));
+		}
+		return builder.build();
 	}
 
 }
