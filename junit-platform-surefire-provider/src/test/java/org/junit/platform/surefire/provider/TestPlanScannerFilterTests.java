@@ -66,7 +66,7 @@ public class TestPlanScannerFilterTests {
 	}
 
 	private TestPlanScannerFilter newFilter() {
-		return new TestPlanScannerFilter(LauncherFactory.create());
+		return new TestPlanScannerFilter(LauncherFactory.create(), "", "");
 	}
 
 	private static class EmptyClass {

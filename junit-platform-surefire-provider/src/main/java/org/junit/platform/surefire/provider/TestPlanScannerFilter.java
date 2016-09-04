@@ -11,11 +11,15 @@
 package org.junit.platform.surefire.provider;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectJavaClass;
+import static org.junit.platform.launcher.TagFilter.excludeTags;
+import static org.junit.platform.launcher.TagFilter.includeTags;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 
 import java.util.function.Predicate;
 
 import org.apache.maven.surefire.util.ScannerFilter;
+import org.junit.platform.engine.Filter;
+import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.TestIdentifier;
@@ -30,17 +34,41 @@ final class TestPlanScannerFilter implements ScannerFilter {
 			|| testIdentifier.isContainer();
 
 	private final Launcher launcher;
+	private final String[] groups;
+	private final String[] excludedGroups;
 
-	public TestPlanScannerFilter(Launcher launcher) {
+	public TestPlanScannerFilter(final Launcher launcher, final String groups, final String excludedGroups) {
 		this.launcher = launcher;
+		this.groups = groups.split(",");
+		this.excludedGroups = excludedGroups.split(",");
 	}
 
 	@Override
 	@SuppressWarnings("rawtypes")
 	public boolean accept(Class testClass) {
-		LauncherDiscoveryRequest discoveryRequest = request().selectors(selectJavaClass(testClass)).build();
+		LauncherDiscoveryRequest discoveryRequest = createLauncherDiscoveryRequest(testClass);
 		TestPlan testPlan = launcher.discover(discoveryRequest);
 		return testPlan.countTestIdentifiers(hasTests) > 0;
+	}
+
+	private LauncherDiscoveryRequest createLauncherDiscoveryRequest(final Class<?> testClass) {
+		return request().selectors(selectJavaClass(testClass))
+			.filters(includeTagsFilter(), excludeTagsFilter())
+			.build();
+	}
+
+	private Filter<TestDescriptor> excludeTagsFilter() {
+		if (excludedGroups.length > 0) {
+			return excludeTags(excludedGroups);
+		}
+		return null;
+	}
+
+	private Filter<TestDescriptor> includeTagsFilter() {
+		if (groups.length > 0) {
+			return includeTags(groups);
+		}
+		return null;
 	}
 
 }

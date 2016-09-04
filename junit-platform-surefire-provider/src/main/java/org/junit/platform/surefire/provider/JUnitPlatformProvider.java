@@ -10,6 +10,8 @@
 
 package org.junit.platform.surefire.provider;
 
+import static org.apache.maven.surefire.booter.ProviderParameterNames.TESTNG_EXCLUDEDGROUPS_PROP;
+import static org.apache.maven.surefire.booter.ProviderParameterNames.TESTNG_GROUPS_PROP;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectJavaClass;
 import static org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder.request;
 
@@ -17,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.maven.surefire.booter.ProviderParameterNames;
 import org.apache.maven.surefire.providerapi.AbstractProvider;
 import org.apache.maven.surefire.providerapi.ProviderParameters;
 import org.apache.maven.surefire.report.ReporterException;
@@ -37,6 +40,8 @@ public class JUnitPlatformProvider extends AbstractProvider {
 
 	private final ProviderParameters parameters;
 	private final Launcher launcher;
+	private final String groups;
+	private final String excludedGroups;
 
 	public JUnitPlatformProvider(ProviderParameters parameters) {
 		this(parameters, LauncherFactory.create());
@@ -44,6 +49,8 @@ public class JUnitPlatformProvider extends AbstractProvider {
 
 	JUnitPlatformProvider(ProviderParameters parameters, Launcher launcher) {
 		this.parameters = parameters;
+		this.groups = parameters.getProviderProperties().getOrDefault(TESTNG_GROUPS_PROP, "");
+		this.excludedGroups = parameters.getProviderProperties().getOrDefault(TESTNG_EXCLUDEDGROUPS_PROP, "");
 		this.launcher = launcher;
 		Logger.getLogger("org.junit").setLevel(Level.WARNING);
 	}
@@ -71,7 +78,7 @@ public class JUnitPlatformProvider extends AbstractProvider {
 	}
 
 	private TestsToRun scanClasspath() {
-		TestsToRun scannedClasses = parameters.getScanResult().applyFilter(new TestPlanScannerFilter(launcher),
+		TestsToRun scannedClasses = parameters.getScanResult().applyFilter(new TestPlanScannerFilter(launcher, groups, excludedGroups),
 			parameters.getTestClassLoader());
 		return parameters.getRunOrderCalculator().orderTestClasses(scannedClasses);
 	}
